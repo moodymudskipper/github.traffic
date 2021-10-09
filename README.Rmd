@@ -1,0 +1,72 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# github.traffic
+
+{github.traffic} lets you retrieve github traffic information + some related info such
+as stars and watchers.
+
+github only provides data for the last 14 days but this package helps you build
+and update a local database wih this info. You can also schedule he update to
+run at a chosen frequency (Windows only at the moment)
+
+
+## Installation
+
+Install with:
+
+``` r
+remotes::install_github("moodymudskipper/github.traffic")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example}
+library(github.traffic)
+```
+
+Fetch last 14 days of data for a given repo (or a vecor of repos) :
+
+```{r}
+fetch_github_traffic("moodymudskipper/flow")
+```
+
+Or all repos from a given owner (excluding forks and private repos), this
+might take a bit of time if you have many repos. You can also provide a 
+character vector containing a mix of repos and owners.
+
+```{r}
+fetch_github_traffic("moodymudskipper")
+```
+
+Create or update a local DB manually with this info
+
+```{r}
+update_github_traffic_db("moodymudskipper") 
+```
+
+Or automate this process so it's updated at the chosen frequency (daily by default)
+
+```{r}
+schedule_github_traffic_db_updates("moodymudskipper")
+```
+
+Then retrieve your data by running:
+
+```{r}
+github_traffic_db()
+```
