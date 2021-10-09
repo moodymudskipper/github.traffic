@@ -20,3 +20,5 @@ Imports:
     purrr,
     rvest,
     taskscheduleR
+URL: https://github.com/moodymudskipper/github.traffic
+BugReports: https://github.com/moodymudskipper/github.traffic/issues
