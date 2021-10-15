@@ -2,8 +2,11 @@
 
 export(fetch_github_traffic)
 export(github_traffic_db)
+export(github_traffic_plot)
 export(schedule_github_traffic_db_updates)
 export(update_github_traffic_db)
 import(dplyr)
+import(ggplot2)
 import(purrr)
+import(tidyr)
 importFrom(utils,capture.output)

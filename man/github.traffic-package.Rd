@@ -8,6 +8,14 @@
 \description{
 What the package does (one paragraph).
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/moodymudskipper/github.traffic}
+  \item Report bugs at \url{https://github.com/moodymudskipper/github.traffic/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Antoine Fabri \email{antoine.fabri@gmail.com}
 

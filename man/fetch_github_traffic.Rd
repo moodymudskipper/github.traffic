@@ -17,8 +17,8 @@ A list of ables
 This provides a list of tables containing all the info github makes
 available regarding traffic to a repo. It is limited to the last 14 days. To
 store the data and update it, use \code{update_github_traffic_db()}, to automate it
-(so your DB is updated daily for instance) use \code{schedule_github_traffic_db_updates()}
-(Windows only). Then retrieve local DB with \code{github_traffic_db()}.
+(so your DB is updated daily for instance) use \code{schedule_github_traffic_db_updates()}.
+Then retrieve local DB with \code{github_traffic_db()}.
 }
 \details{
 The output contains tibbles named :

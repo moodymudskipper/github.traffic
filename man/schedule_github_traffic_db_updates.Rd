@@ -15,17 +15,29 @@ schedule_github_traffic_db_updates(
 \item{repos}{A characer vector of repos in he "owner/repo" or "owner" format,
 in the latter case the info of all repos is fetched.}
 
-\item{schedule}{When to schedule the update. Either one of 'ONCE', 'MONTHLY', 'WEEKLY', 'DAILY', 'HOURLY', 'MINUTE', 'ONLOGON', 'ONIDLE'}
+\item{schedule}{When to schedule the update. Either one of
+'WEEKLY', 'DAILY', 'HOURLY', 'MINUTE', 'ONLOGON', 'ONIDLE'.
+'ONIDLE' works for Windows only.}
 
 \item{taskname}{Name of the task.Should not contain any spaces.}
 
-\item{...}{additional parameers forwarded to \code{taskscheduleR::taskscheduler_create()}}
+\item{...}{additional parameers forwarded to \code{taskscheduleR::taskscheduler_create()}
+(Windows) or \code{cronR::cron_add()} (Other platforms)
+
+This is essentially a wrapper around \code{taskscheduleR::taskscheduler_create()}
+and \code{cronR::cron_add()} that schedule tasks respectively on Windows and other
+platforms.
+
+The parameters are named as in \code{taskscheduleR::taskscheduler_create()}
+but \code{schedule} is translated and forwarded to the frequency arg of \code{cronR::cron_add()}
+and \code{taskname} is forwarded to \code{id}.
+``}
 }
 \value{
 Returns \code{NULL} silently, called for side effects.
 }
 \description{
-This is only for windows for now. Allows you to setup automatic updates
+Provides a way to setup automatic updates
 at the chosen frequency into the DB defined in the \code{"R_GITHUB_TRAFFIC_DB_PATH"},
 or \code{"~/.github_traffic_db.RDS"} if it's undefined.
 }

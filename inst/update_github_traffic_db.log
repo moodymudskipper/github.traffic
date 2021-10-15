@@ -1,1 +1,7 @@
 
+Fehler in loadNamespace(x) : es gibt kein Paket namens 'github.traffic'
+Ruft auf: loadNamespace -> withRestarts -> withOneRestart -> doWithOneRestart
+Ausf"uhrung angehalten
+Fehler in loadNamespace(x) : es gibt kein Paket namens 'github.traffic'
+Ruft auf: loadNamespace -> withRestarts -> withOneRestart -> doWithOneRestart
+Ausf"uhrung angehalten
