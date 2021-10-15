@@ -3,8 +3,8 @@
 #' This provides a list of tables containing all the info github makes
 #' available regarding traffic to a repo. It is limited to the last 14 days. To
 #' store the data and update it, use `update_github_traffic_db()`, to automate it
-#' (so your DB is updated daily for instance) use `schedule_github_traffic_db_updates()`
-#' (Windows only). Then retrieve local DB with `github_traffic_db()`.
+#' (so your DB is updated daily for instance) use `schedule_github_traffic_db_updates()`.
+#' Then retrieve local DB with `github_traffic_db()`.
 #'
 #'
 #' The output contains tibbles named :
@@ -212,26 +212,125 @@ fetch_github_traffic_impl <- function(owner, repo, pb) {
 
 #' Schedule Github Traffic DB Updates
 #'
-#' This is only for windows for now. Allows you to setup automatic updates
+#' Provides a way to setup automatic updates
 #' at the chosen frequency into the DB defined in the `"R_GITHUB_TRAFFIC_DB_PATH"`,
 #' or `"~/.github_traffic_db.RDS"` if it's undefined.
 #' @inheritParams fetch_github_traffic
-#' @param schedule When to schedule the update. Either one of 'ONCE', 'MONTHLY', 'WEEKLY', 'DAILY', 'HOURLY', 'MINUTE', 'ONLOGON', 'ONIDLE'
+#' @param schedule When to schedule the update. Either one of
+#'    'WEEKLY', 'DAILY', 'HOURLY', 'MINUTE', 'ONLOGON', 'ONIDLE'.
+#'    'ONIDLE' works for Windows only.
 #' @param taskname Name of the task.Should not contain any spaces.
 #' @param ... additional parameers forwarded to `taskscheduleR::taskscheduler_create()`
+#'   (Windows) or `cronR::cron_add()` (Other platforms)
+#'
+#' This is essentially a wrapper around `taskscheduleR::taskscheduler_create()`
+#' and `cronR::cron_add()` that schedule tasks respectively on Windows and other
+#' platforms.
+#'
+#' The parameters are named as in `taskscheduleR::taskscheduler_create()`
+#' but `schedule` is translated and forwarded to the frequency arg of `cronR::cron_add()`
+#' and `taskname` is forwarded to `id`.
+#'   ``
 #' @return Returns `NULL` silently, called for side effects.
 #' @export
 schedule_github_traffic_db_updates <- function(repos, schedule = "DAILY", taskname = "Update-Github-Traffic-DB", ...) {
-  # remove task if already exists
-  cmd <- sprintf("schtasks /Delete /TN %s /F", shQuote(taskname, type = "cmd"))
-  system(cmd, intern = FALSE, show.output.on.console = FALSE)
 
-  msg <- taskscheduleR::taskscheduler_create(
-    taskname = taskname,
-    rscript = system.file("update_github_traffic_db.R", package = "github.traffic"),
-    schedule = schedule,
-    rscript_args = repos,
-    ...)
-  capture.output(msg <- suppressMessages(suppressWarnings(rvest::repair_encoding(msg))))
-  message(msg)
+  choices <- c('WEEKLY', 'DAILY', 'HOURLY', 'MINUTE', 'ONLOGON', 'ONIDLE')
+  schedule = match.arg(schedule, choices)
+  rscript <- system.file("update_github_traffic_db.R", package = "github.traffic")
+
+  if(.Platform$OS.type == "windows") {
+    # remove task if already exists
+    cmd <- sprintf("schtasks /Delete /TN %s /F", shQuote(taskname, type = "cmd"))
+    system(cmd, intern = FALSE, show.output.on.console = FALSE)
+
+    msg <- taskscheduleR::taskscheduler_create(
+      taskname = taskname,
+      rscript = rscript,
+      schedule = schedule,
+      rscript_args = repos,
+      ...)
+    capture.output(msg <- suppressMessages(suppressWarnings(rvest::repair_encoding(msg))))
+    message(msg)
+  } else {
+    if(schedule == "ONIDLE") stop("'ONIDLE' works for Windows only")
+    days_of_week <- if(schedule == "WEEKLY") 1
+    frequency <- switch(
+      schedule,
+      'WEEKLY' = 'daily',
+      'DAILY' = 'daily',
+      'HOURLY' = 'hourly',
+      'MINUTE' = 'minutely',
+      'ONLOGON' = '@reboot'
+    )
+    cmd <- cronR::cron_rscript(rscript, rscript_args = repos)
+    cronR::cron_add(cmd, frequency = frequency, id = taskname, ask=FALSE)
+  }
+}
+
+#' Plot github traffic
+#'
+#' If several repos or an owner is provided in the `repos` argument, `count`
+#' and `uniques` will be summed, which might lead to a (probably small) overestimation
+#' of `uniques`.
+#'
+#' @param repos A vector of repos or owners
+#' @param what "clones" or "views"
+#' @param freq "day" or "week"
+#'
+#' @export
+github_traffic_plot <- function(repos, what = c("clones", "views"), freq = c("day", "week")) {
+  what <- match.arg(what)
+  freq <- match.arg(freq)
+  db <- github_traffic_db()
+  if(what == "clones") {
+    if(freq == "day") {
+      data <- db$clones_per_day
+    } else {
+      data <- db$clones_per_week
+    }
+  } else {
+    if(freq == "day") {
+      data <- db$page_views_per_day
+    } else {
+      data <- db$page_views_per_week
+    }
+  }
+
+  data <- mutate(data, repo2 = paste0(owner, "/", repo))
+
+  repo_lgl <- grepl("/", repos)
+  if(any(repo_lgl)) {
+    data1 <- filter(data, repo2 %in% repos[repo_lgl])
+  } else {
+    data1 <- data[0,]
+  }
+
+  if(any(!repo_lgl)) {
+    data2 <- filter(data, repo %in% repos[!repo_lgl] | owner %in% repos[!repo_lgl])
+  } else {
+    data2 <- data[0,]
+  }
+
+  data <-
+    bind_rows(data1, data2) %>%
+    filter(!is.na(timestamp)) %>%
+    group_by(repo2, timestamp) %>%
+    # since data takes only into account 14 day some data points might have
+    # incomplete weeks or days so we take the max
+    summarize(count = max(count), uniques = max(uniques), .groups = "drop") %>%
+    group_by(timestamp) %>%
+    summarize(count = sum(count), uniques = sum(uniques), .groups = "drop") %>%
+    mutate(
+      count = count + max(count/200),
+      uniques = uniques - max(count/200)
+    )
+
+    data %>%
+      pivot_longer(c(count, uniques), names_to = "metric", values_to = "n") %>%
+      ggplot() +
+      aes(timestamp, n, color = metric) +
+      geom_line() +
+      theme_minimal() +
+      ggtitle(toString(repos))
 }

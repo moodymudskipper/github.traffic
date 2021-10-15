@@ -1,5 +1,5 @@
 
-#' @import  purrr dplyr
+#' @import  purrr dplyr tidyr ggplot2
 #' @importFrom utils capture.output
 #' @keywords internal
 "_PACKAGE"
