@@ -41,7 +41,7 @@ library(github.traffic)
 
 Fetch last 14 days of data for a given repo (or a vecor of repos) :
 
-```{r}
+```{r, eval = FALSE}
 fetch_github_traffic("moodymudskipper/flow")
 ```
 
@@ -49,19 +49,19 @@ Or all repos from a given owner (excluding forks and private repos), this
 might take a bit of time if you have many repos. You can also provide a 
 character vector containing a mix of repos and owners.
 
-```{r}
+```{r, eval = FALSE}
 fetch_github_traffic("moodymudskipper")
 ```
 
-Create or update a local DB manually with this info
+Create or update manually a local DB with this info
 
-```{r}
+```{r, eval = FALSE}
 update_github_traffic_db("moodymudskipper") 
 ```
 
 Or automate this process so it's updated at the chosen frequency (daily by default)
 
-```{r}
+```{r, eval = FALSE}
 schedule_github_traffic_db_updates("moodymudskipper")
 ```
 
@@ -70,3 +70,14 @@ Then retrieve your data by running:
 ```{r}
 github_traffic_db()
 ```
+
+`github_traffic_plot()` lets you visualize your visits and clones
+
+```{r}
+# daily views of my {flow} package 
+github_traffic_plot("flow", what = "views", freq = "day")
+
+# weekly clones of all my repos
+github_traffic_plot("moodymudskipper", what = "clones", freq = "week")
+```
+
