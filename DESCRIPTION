@@ -12,13 +12,17 @@ Encoding: UTF-8
 Language: en
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1.9001
+RoxygenNote: 7.1.2
 Imports: 
     dplyr,
     gh,
     progress,
     purrr,
     rvest,
-    taskscheduleR
+    ggplot2,
+    tidyr
+Suggests:
+    taskscheduleR,
+    cronR
 URL: https://github.com/moodymudskipper/github.traffic
 BugReports: https://github.com/moodymudskipper/github.traffic/issues
