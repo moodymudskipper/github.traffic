@@ -327,6 +327,8 @@ github_traffic_plot <- function(repos, what = c("clones", "views"), freq = c("da
     )
 
     data %>%
+      complete(timestamp = full_seq(timestamp, 1)) %>%
+      mutate(count = ifelse(is.na(count), 0, count), uniques = ifelse(is.na(uniques), 0, uniques)) %>%
       pivot_longer(c(count, uniques), names_to = "metric", values_to = "n") %>%
       ggplot() +
       aes(timestamp, n, color = metric) +
